@@ -62,6 +62,10 @@ def weights_file() -> Path:
     return OUTPUT_DIR / "weights.json"
 
 
+def predictions_file() -> Path:
+    return OUTPUT_DIR / "validation_predictions.parquet"
+
+
 def load_forecaster_data(clusters: list[str]) -> pl.DataFrame:
     frames = []
     for cluster_id in clusters:
@@ -166,6 +170,80 @@ def score_frame(
     return standardized.with_columns(score_expr.alias("risk_score"))
 
 
+def precision_at_k(frame: pl.DataFrame, k: int) -> float:
+    if k <= 0 or frame.height == 0:
+        return 0.0
+
+    top_k = frame.sort("risk_score", descending=True).head(k)
+    positives = top_k.filter(pl.col("target_failure_15m")).height
+    return positives / top_k.height if top_k.height else 0.0
+
+
+def recall_at_k(frame: pl.DataFrame, k: int) -> float:
+    positives_total = frame.filter(pl.col("target_failure_15m")).height
+    if k <= 0 or positives_total == 0:
+        return 0.0
+
+    top_k = frame.sort("risk_score", descending=True).head(k)
+    positives = top_k.filter(pl.col("target_failure_15m")).height
+    return positives / positives_total
+
+
+def average_precision(frame: pl.DataFrame) -> float:
+    ranked = (
+        frame
+        .sort("risk_score", descending=True)
+        .with_row_index("rank", offset=1)
+        .with_columns(
+            [
+                pl.col("target_failure_15m").cast(pl.Int64).cum_sum().alias("true_positives"),
+            ]
+        )
+        .with_columns(
+            [
+                (pl.col("true_positives") / pl.col("rank")).alias("precision_at_rank"),
+            ]
+        )
+    )
+
+    positives_total = ranked.filter(pl.col("target_failure_15m")).height
+    if positives_total == 0:
+        return 0.0
+
+    ap_sum = (
+        ranked
+        .filter(pl.col("target_failure_15m"))
+        .select(pl.col("precision_at_rank").sum().alias("ap_sum"))
+        .item()
+    )
+    return float(ap_sum) / positives_total if ap_sum is not None else 0.0
+
+
+def build_metrics(train_df: pl.DataFrame, valid_df: pl.DataFrame, split_time: int) -> dict[str, float | int]:
+    positive_count = valid_df.filter(pl.col("target_failure_15m")).height
+    positive_rate = positive_count / valid_df.height if valid_df.height else 0.0
+    one_percent = max(1, int(valid_df.height * 0.01))
+    point_one_percent = max(1, int(valid_df.height * 0.001))
+
+    return {
+        "train_rows": train_df.height,
+        "validation_rows": valid_df.height,
+        "validation_positive_rows": positive_count,
+        "validation_positive_rate": positive_rate,
+        "split_time": split_time,
+        "average_precision": average_precision(valid_df),
+        "precision_at_0_1_percent": precision_at_k(valid_df, point_one_percent),
+        "recall_at_0_1_percent": recall_at_k(valid_df, point_one_percent),
+        "precision_at_1_percent": precision_at_k(valid_df, one_percent),
+        "recall_at_1_percent": recall_at_k(valid_df, one_percent),
+    }
+
+
+def save_json(path: Path, payload: dict) -> None:
+    with path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, sort_keys=True)
+
+
 def main() -> None:
     clusters = parse_clusters()
     valid_fraction = validation_fraction()
@@ -181,12 +259,25 @@ def main() -> None:
     train_df, valid_df, split_time = split_by_time(frame, valid_fraction)
     feature_stats, weights = fit_feature_weights(train_df, features)
     scored_valid_df = score_frame(valid_df, features, feature_stats, weights)
+    metrics = build_metrics(train_df, scored_valid_df, split_time)
+
+    save_json(
+        weights_file(),
+        {
+            "features": features,
+            "feature_statistics": feature_stats,
+            "weights": weights,
+        },
+    )
+    save_json(metrics_file(), metrics)
+    scored_valid_df.sort("risk_score", descending=True).head(100_000).write_parquet(predictions_file())
 
     print(f"Loaded rows: {frame.height}")
     print(f"Split timestamp: {split_time}")
     print(f"Train rows: {train_df.height}")
     print(f"Validation rows: {valid_df.height}")
     print(f"Validation rows with scores: {scored_valid_df.height}")
+    print(f"Metrics: {json.dumps(metrics, sort_keys=True)}")
 
 
 if __name__ == "__main__":
