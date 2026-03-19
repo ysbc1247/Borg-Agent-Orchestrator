@@ -21,6 +21,16 @@ Validation results:
 - Precision@1%: `0.0070676`
 - Recall@1%: `0.2348066`
 
+How to read these calculations:
+
+- Validation positive rate (`0.0301%`) is the base rate of positives in the validation split and is computed as `1,448 / 4,810,777`.
+- `Precision@0.1%` means: sort all validation rows by descending `risk_score`, take the highest-risk `0.1%` of rows, and compute the fraction of true positives inside that slice.
+- With `4,810,777` validation rows, the top `0.1%` slice contains about `4,810` rows.
+- `Precision@1%` means the same calculation on the highest-risk `1%` of validation rows, which is about `48,107` rows.
+- The precision-lift interpretation compares those precision values against the base rate.
+- For the `base` profile, `1.2266% / 0.0301% ≈ 40.7`, so the top `0.1%` ranked slice is about `40x` denser in positives than random selection.
+- For the `base` profile, `0.7068% / 0.0301% ≈ 23.5`, so the top `1%` ranked slice is about `23x` denser in positives than random selection.
+
 ## Alternate Rolling Profile
 
 Alternate profile: `base_plus_roll`
