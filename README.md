@@ -60,6 +60,7 @@ python scripts/make_forecaster_dataset.py
 ```
 
 The forecaster builder labels a row as positive when the task's final terminal event is in the default failure set `2,3,6` and occurs within the next 15 minutes after the usage window ends.
+It also writes task-history temporal features such as one-step lags, one-step deltas, and 3-window rolling means for CPU and memory usage/utilization.
 
 To train and evaluate the first Polars-only forecasting baseline:
 
@@ -67,11 +68,28 @@ To train and evaluate the first Polars-only forecasting baseline:
 python scripts/train_forecaster_baseline.py
 ```
 
+The trainer supports named feature profiles through `BORG_BASELINE_PROFILE`:
+
+- `base` keeps the strongest average-precision baseline and is the default.
+- `base_plus_roll` adds rolling-mean temporal features and improves the top-risk alert slice.
+- `temporal_full` adds lag, delta, and rolling temporal features for broader experimentation.
+
+Example:
+
+```bash
+BORG_BASELINE_PROFILE=base_plus_roll \
+BORG_BASELINE_DIR=~/Documents/borg_processed/datasets/forecaster/baseline_base_plus_roll \
+python scripts/train_forecaster_baseline.py
+```
+
 The baseline trainer writes:
 
 - `metrics.json`
 - `weights.json`
+- `cluster_metrics.json`
+- `feature_ranking.json`
 - `validation_predictions.parquet`
+- `top_risk_alerts.parquet`
 
 under `~/Documents/borg_processed/datasets/forecaster/baseline` by default.
 

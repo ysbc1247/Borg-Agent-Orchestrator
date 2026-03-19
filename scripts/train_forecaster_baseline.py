@@ -8,7 +8,7 @@ DEFAULT_FORECASTER_DIR = Path.home() / "Documents" / "borg_processed" / "dataset
 DEFAULT_OUTPUT_DIR = DEFAULT_FORECASTER_DIR / "baseline"
 DEFAULT_CLUSTERS = ("b", "c", "d", "e", "f", "g")
 DEFAULT_VALID_FRACTION = 0.2
-DEFAULT_FEATURES = (
+BASE_FEATURES = (
     "avg_cpu",
     "max_cpu",
     "avg_mem",
@@ -23,6 +23,40 @@ DEFAULT_FEATURES = (
     "scheduling_class",
     "event_count",
 )
+ROLLING_MEAN_FEATURES = (
+    "avg_cpu_roll3_mean",
+    "max_cpu_roll3_mean",
+    "avg_mem_roll3_mean",
+    "max_mem_roll3_mean",
+    "avg_cpu_utilization_roll3_mean",
+    "max_cpu_utilization_roll3_mean",
+    "avg_mem_utilization_roll3_mean",
+    "max_mem_utilization_roll3_mean",
+)
+FULL_TEMPORAL_FEATURES = (
+    "avg_cpu_lag_1",
+    "avg_cpu_delta_1",
+    "max_cpu_lag_1",
+    "max_cpu_delta_1",
+    "avg_mem_lag_1",
+    "avg_mem_delta_1",
+    "max_mem_lag_1",
+    "max_mem_delta_1",
+    "avg_cpu_utilization_lag_1",
+    "avg_cpu_utilization_delta_1",
+    "max_cpu_utilization_lag_1",
+    "max_cpu_utilization_delta_1",
+    "avg_mem_utilization_lag_1",
+    "avg_mem_utilization_delta_1",
+    "max_mem_utilization_lag_1",
+    "max_mem_utilization_delta_1",
+)
+DEFAULT_FEATURE_PROFILE = "base"
+FEATURE_PROFILES = {
+    "base": BASE_FEATURES,
+    "base_plus_roll": BASE_FEATURES + ROLLING_MEAN_FEATURES,
+    "temporal_full": BASE_FEATURES + ROLLING_MEAN_FEATURES + FULL_TEMPORAL_FEATURES,
+}
 
 FORECASTER_DIR = Path(os.environ.get("BORG_FORECASTER_DIR", DEFAULT_FORECASTER_DIR)).expanduser()
 OUTPUT_DIR = Path(os.environ.get("BORG_BASELINE_DIR", DEFAULT_OUTPUT_DIR)).expanduser()
@@ -46,8 +80,16 @@ def validation_fraction() -> float:
 def feature_names() -> list[str]:
     raw = os.environ.get("BORG_BASELINE_FEATURES")
     if not raw:
-        return list(DEFAULT_FEATURES)
+        return list(FEATURE_PROFILES[feature_profile_name()])
     return [feature.strip() for feature in raw.split(",") if feature.strip()]
+
+
+def feature_profile_name() -> str:
+    profile = os.environ.get("BORG_BASELINE_PROFILE", DEFAULT_FEATURE_PROFILE).strip()
+    if profile not in FEATURE_PROFILES:
+        supported = ", ".join(sorted(FEATURE_PROFILES))
+        raise ValueError(f"Unsupported BORG_BASELINE_PROFILE '{profile}'. Supported values: {supported}")
+    return profile
 
 
 def forecaster_file(cluster_id: str) -> Path:
@@ -309,12 +351,14 @@ def save_json(path: Path, payload: dict) -> None:
 def main() -> None:
     clusters = parse_clusters()
     valid_fraction = validation_fraction()
+    feature_profile = feature_profile_name()
     features = feature_names()
 
     print(f"Reading forecaster datasets from: {FORECASTER_DIR}")
     print(f"Writing baseline artifacts to: {OUTPUT_DIR}")
     print(f"Clusters: {clusters}")
     print(f"Validation fraction: {valid_fraction}")
+    print(f"Feature profile: {feature_profile}")
     print(f"Features: {features}")
 
     frame = load_forecaster_data(clusters)
@@ -329,14 +373,15 @@ def main() -> None:
     save_json(
         weights_file(),
         {
+            "feature_profile": feature_profile,
             "features": features,
             "feature_statistics": feature_stats,
             "weights": weights,
         },
     )
-    save_json(metrics_file(), metrics)
+    save_json(metrics_file(), {"feature_profile": feature_profile, **metrics})
     save_json(cluster_metrics_file(), cluster_metrics)
-    save_json(feature_ranking_file(), {"ranked_features": ranked_weights})
+    save_json(feature_ranking_file(), {"feature_profile": feature_profile, "ranked_features": ranked_weights})
     scored_valid_df.sort("risk_score", descending=True).head(100_000).write_parquet(predictions_file())
     alert_candidates.write_parquet(alerts_file())
 

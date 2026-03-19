@@ -43,6 +43,33 @@ def output_file(cluster_id: str) -> Path:
     return OUTPUT_DIR / f"{cluster_id}_forecaster.parquet"
 
 
+def add_temporal_features(frame: pl.LazyFrame) -> pl.LazyFrame:
+    task_keys = ["collection_id", "instance_index"]
+    temporal_bases = [
+        "avg_cpu",
+        "max_cpu",
+        "avg_mem",
+        "max_mem",
+        "avg_cpu_utilization",
+        "max_cpu_utilization",
+        "avg_mem_utilization",
+        "max_mem_utilization",
+    ]
+
+    expressions: list[pl.Expr] = []
+    for feature in temporal_bases:
+        lag_expr = pl.col(feature).shift(1).over(task_keys)
+        expressions.extend(
+            [
+                lag_expr.alias(f"{feature}_lag_1"),
+                (pl.col(feature) - lag_expr).alias(f"{feature}_delta_1"),
+                pl.col(feature).rolling_mean(window_size=3, min_samples=1).over(task_keys).alias(f"{feature}_roll3_mean"),
+            ]
+        )
+
+    return frame.with_columns(expressions)
+
+
 def build_forecaster_frame(cluster_id: str) -> pl.DataFrame:
     failure_event_types = parse_failure_event_types()
     horizon_us = prediction_horizon()
@@ -51,12 +78,14 @@ def build_forecaster_frame(cluster_id: str) -> pl.DataFrame:
 
     return (
         dataset
+        .sort(["collection_id", "instance_index", "end_time"])
         .with_columns(
             [
                 (pl.col("last_event_time") - pl.col("end_time")).alias("time_to_terminal_event_us"),
                 pl.col("final_event_type").is_in(failure_event_types).alias("is_failure_terminal_event"),
             ]
         )
+        .pipe(add_temporal_features)
         .with_columns(
             [
                 (
@@ -88,6 +117,30 @@ def build_forecaster_frame(cluster_id: str) -> pl.DataFrame:
                 pl.col("max_cpu_utilization"),
                 pl.col("avg_mem_utilization"),
                 pl.col("max_mem_utilization"),
+                pl.col("avg_cpu_lag_1"),
+                pl.col("avg_cpu_delta_1"),
+                pl.col("avg_cpu_roll3_mean"),
+                pl.col("max_cpu_lag_1"),
+                pl.col("max_cpu_delta_1"),
+                pl.col("max_cpu_roll3_mean"),
+                pl.col("avg_mem_lag_1"),
+                pl.col("avg_mem_delta_1"),
+                pl.col("avg_mem_roll3_mean"),
+                pl.col("max_mem_lag_1"),
+                pl.col("max_mem_delta_1"),
+                pl.col("max_mem_roll3_mean"),
+                pl.col("avg_cpu_utilization_lag_1"),
+                pl.col("avg_cpu_utilization_delta_1"),
+                pl.col("avg_cpu_utilization_roll3_mean"),
+                pl.col("max_cpu_utilization_lag_1"),
+                pl.col("max_cpu_utilization_delta_1"),
+                pl.col("max_cpu_utilization_roll3_mean"),
+                pl.col("avg_mem_utilization_lag_1"),
+                pl.col("avg_mem_utilization_delta_1"),
+                pl.col("avg_mem_utilization_roll3_mean"),
+                pl.col("max_mem_utilization_lag_1"),
+                pl.col("max_mem_utilization_delta_1"),
+                pl.col("max_mem_utilization_roll3_mean"),
                 pl.col("req_cpu"),
                 pl.col("req_mem"),
                 pl.col("priority"),
