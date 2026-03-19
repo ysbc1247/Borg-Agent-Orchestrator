@@ -106,12 +106,36 @@ def build_forecaster_frame(cluster_id: str) -> pl.DataFrame:
     )
 
 
+def write_forecaster_frame(cluster_id: str) -> Path:
+    frame = build_forecaster_frame(cluster_id)
+    path = output_file(cluster_id)
+    frame.write_parquet(path)
+
+    positive_rows = frame.filter(pl.col("target_failure_15m")).height
+    positive_rate = positive_rows / frame.height if frame.height else 0.0
+
+    print(
+        f"✅ {cluster_id}: wrote {frame.height} rows to {path} "
+        f"(positive labels: {positive_rows}, rate: {positive_rate:.4%})"
+    )
+    return path
+
+
 def main() -> None:
+    clusters = parse_clusters()
+
     print(f"Reading joined datasets from: {DATASET_DIR}")
     print(f"Writing forecaster datasets to: {OUTPUT_DIR}")
-    print(f"Clusters: {parse_clusters()}")
+    print(f"Clusters: {clusters}")
     print(f"Failure event types: {parse_failure_event_types()}")
     print(f"Prediction horizon (us): {prediction_horizon()}")
+
+    for cluster_id in clusters:
+        path = dataset_file(cluster_id)
+        if not path.exists():
+            print(f"Skipping {cluster_id}: missing {path.name}")
+            continue
+        write_forecaster_frame(cluster_id)
 
 
 if __name__ == "__main__":
