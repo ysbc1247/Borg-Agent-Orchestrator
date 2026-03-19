@@ -47,6 +47,7 @@ Supporting docs:
 - `Agents.md` for repository workflow instructions
 - `MAS_ARCHITECTURE.md` for the MAS design
 - `README.md` for the user-facing workflow
+- `reports/202603191919_milestone.md` for the latest milestone checkpoint
 
 ## Latest Verified Outputs
 
@@ -125,6 +126,11 @@ These files should be kept current so a new Codex session behaves consistently:
 - `README.md` for user-facing workflow and usage changes
 - `reports/` for timestamped evaluation, schema, and milestone-style session records when relevant
 
+Latest milestone checkpoint:
+
+- `reports/202603191919_milestone.md`
+- Use it together with `Agents.md` and this file when resuming in a new Codex context
+
 ## Immediate Next Steps
 
 The next logical engineering work is now to either improve the forecaster model class beyond the weighted risk-score baseline or begin the scheduler data stage with the current baseline outputs.
@@ -151,13 +157,13 @@ If continuing the forecaster improvements, split work into commits like:
 
 ## Recent Commit Landmarks
 
-- `1d097a3` Separate repo instructions from MAS architecture
-- `bad1df9` Document forecaster baseline training
-- `a03dd80` Evaluate and persist forecaster baseline artifacts
-- `f15208c` Fit weighted risk-score forecaster baseline
-- `290367d` Document forecaster dataset generation
-- `c2f6c94` Write per-cluster forecaster training datasets
-- `ac640af` Exclude clusters a and h by default
+- `7a70556` Update handoff continuity notes
+- `e25f5e8` Record milestone persistence workflow
+- `be8a3e8` Prefix report filenames with KST timestamp
+- `e56f619` Add schema reference report
+- `4d13170` Add forecaster evaluation report
+- `281af51` Tighten commit sharding policy
+- `032709b` Add local cloud forecaster adapter
 
 ## Launch Command
 
