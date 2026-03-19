@@ -31,6 +31,14 @@ How to read these calculations:
 - For the `base` profile, `1.2266% / 0.0301% ≈ 40.7`, so the top `0.1%` ranked slice is about `40x` denser in positives than random selection.
 - For the `base` profile, `0.7068% / 0.0301% ≈ 23.5`, so the top `1%` ranked slice is about `23x` denser in positives than random selection.
 
+How the risk score is calculated:
+
+- Each input feature is standardized using the training split statistics: null values are filled with the training median, then each value is transformed with `(value - mean) / std`.
+- A feature weight is computed from the training data as the difference between the mean standardized feature value for positive rows and the mean standardized feature value for negative rows.
+- The final `risk_score` is a linear weighted sum of the standardized feature values across the selected feature set.
+- Higher `risk_score` means the row is more similar to the positive class under this baseline ranking model.
+- The score is used as a ranking value, not as a calibrated probability.
+
 ## Alternate Rolling Profile
 
 Alternate profile: `base_plus_roll`
