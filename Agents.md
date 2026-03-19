@@ -38,6 +38,8 @@ These instructions apply to work performed in this repository.
 - Treat `~/Documents/borg_data` as the default raw data location.
 - Treat `~/Documents/borg_processed` as the default processed data location.
 - Do not commit generated datasets or large external data files into git.
+- When a new parquet type or artifact directory is created under the external processed-data tree, add a schema or artifact explanation file in that same directory describing what the files mean and what the important columns represent.
+- Do not rely only on repository docs for parquet meanings; keep a local README-style explanation beside the actual generated outputs.
 
 ## Cluster Defaults
 
