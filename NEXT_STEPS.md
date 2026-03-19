@@ -39,6 +39,7 @@ Implemented scripts:
 - `scripts/make_dataset.py`
 - `scripts/make_forecaster_dataset.py`
 - `scripts/export_common_forecaster_dataset.py`
+- `scripts/build_local_common_forecaster_dataset.py`
 - `scripts/train_forecaster_baseline.py`
 
 Supporting docs:
@@ -64,6 +65,12 @@ Canonical forecaster datasets:
 - Built successfully for clusters `b` through `g`
 - Location: `~/Documents/borg_processed/datasets/forecaster/common_forecaster`
 - Purpose: stable workload/node/time-window schema for future local-cloud adapters
+
+Local-cloud adapter status:
+
+- Generic adapter script added for parquet/CSV telemetry with JSON column mapping
+- Example mapping file: `config/local_common_forecaster.example.json`
+- Verified with a synthetic local telemetry sample and wrote canonical parquet successfully
 
 Baseline artifacts:
 
@@ -114,17 +121,17 @@ Recommended next sequence:
 
 1. Keep `base` as the default forecaster profile for general ranking quality.
 2. Use `base_plus_roll` only when evaluating top-alert triage behavior.
-3. Build a local-cloud adapter that maps local telemetry/events into the canonical forecaster schema.
+3. Replace the example local-cloud mapping with your actual telemetry column mapping and generate a first real canonical local dataset.
 4. Add a stronger forecaster baseline such as regularized logistic regression or gradient boosting using the canonical schema and existing feature profiles.
 5. Compare the new model against `base` and `base_plus_roll` with the existing per-cluster metrics.
-6. Start the placement/scheduler dataset stage once a better forecaster baseline is established or if forecasting work is paused.
+6. Define local eviction/placement outcome labels and begin the scheduler dataset stage once the local forecaster dataset is stable.
 
 ## Suggested Commit Shards For Next Session
 
 If continuing the forecaster improvements, split work into commits like:
 
 1. Add the next forecaster model implementation
-2. Add the local-cloud ingestion adapter for the canonical schema
+2. Replace the local-cloud example mapping with a real platform mapping
 3. Persist model comparison artifacts
 4. Compare cluster-level calibration and ranking behavior
 5. Document the winning forecaster profile/model

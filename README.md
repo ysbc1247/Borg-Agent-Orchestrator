@@ -71,6 +71,18 @@ python scripts/export_common_forecaster_dataset.py
 That exporter writes cluster parquet files under `~/Documents/borg_processed/datasets/forecaster/common_forecaster` by default.
 The canonical schema keeps stable fields such as workload ID, node ID, window timing, observed/requested CPU and memory, temporal features, and failure labels without depending on Borg-specific column names.
 
+To build the same canonical schema from local-cloud telemetry, prepare a parquet or CSV file plus a column-mapping JSON file and run:
+
+```bash
+python scripts/build_local_common_forecaster_dataset.py \
+  --input ~/Documents/local_cloud/telemetry.parquet \
+  --output ~/Documents/local_cloud/common_forecaster.parquet \
+  --mapping config/local_common_forecaster.example.json \
+  --source-platform local_cloud
+```
+
+The example mapping file at [`config/local_common_forecaster.example.json`](/Users/theokim/Documents/github/kyunghee/Borg-Agent-Orchestrator/config/local_common_forecaster.example.json) shows the expected `canonical_name -> raw_column` structure.
+
 To train and evaluate the first Polars-only forecasting baseline:
 
 ```bash

@@ -1,0 +1,23 @@
+{
+  "source_cluster_id": "cluster_id",
+  "source_workload_id": "app_id",
+  "source_workload_instance_id": "instance_id",
+  "source_node_id": "node_id",
+  "window_start_us": "window_start_us",
+  "window_end_us": "window_end_us",
+  "observed_cpu_avg": "cpu_avg",
+  "observed_cpu_peak": "cpu_peak",
+  "observed_mem_avg": "mem_avg",
+  "observed_mem_peak": "mem_peak",
+  "observed_cpu_avg_ratio": "cpu_avg_ratio",
+  "observed_cpu_peak_ratio": "cpu_peak_ratio",
+  "observed_mem_avg_ratio": "mem_avg_ratio",
+  "observed_mem_peak_ratio": "mem_peak_ratio",
+  "requested_cpu": "requested_cpu",
+  "requested_mem": "requested_mem",
+  "workload_priority": "priority",
+  "workload_class": "workload_class",
+  "event_count": "event_count",
+  "terminal_event_time_us": "terminal_event_time_us",
+  "terminal_event_type": "terminal_event_type"
+}
