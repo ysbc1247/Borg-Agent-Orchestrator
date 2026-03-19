@@ -108,10 +108,22 @@ Alternate rolling-profile run summary:
 ## Important Decisions
 
 - Always make small, separate, logical commits and push them.
+- Split commits aggressively by concern and file class; do not bundle code, docs, handoff, config, and policy changes together when they can be committed separately.
 - Do not ask for permission before git commits and pushes.
 - Keep large data outside the repository.
 - Keep `a` and `h` excluded by default because their usage schemas differ from the main group.
 - Prefer continuing to the next implementation step without waiting for explicit user prompts.
+- Use KST timestamp-prefixed filenames in `reports/` with format `YYYYMMDDHHMM_*`.
+- If the user types `milestone`, update the repository memory files for the completed work before ending the session.
+
+## Repository Memory
+
+These files should be kept current so a new Codex session behaves consistently:
+
+- `Agents.md` for durable workflow rules and trigger terms such as `milestone`
+- `NEXT_STEPS.md` for current state, next steps, and continuity notes
+- `README.md` for user-facing workflow and usage changes
+- `reports/` for timestamped evaluation, schema, and milestone-style session records when relevant
 
 ## Immediate Next Steps
 
