@@ -17,3 +17,34 @@ Project scaffold for a Borg-inspired multi-agent scheduling and cluster optimiza
 ├── .gitignore
 └── README.md
 ```
+
+## Data Layout
+
+Raw Borg data should stay outside the repository by default.
+
+- Default raw data path: `~/Documents/borg_data`
+- Default processed data path: `~/Documents/borg_processed`
+
+Both scripts can be overridden with environment variables:
+
+```bash
+export BORG_RAW_DIR=~/Documents/borg_data
+export BORG_PROCESSED_DIR=~/Documents/borg_processed
+python scripts/data_flattener.py
+```
+
+To download shards into the default external location:
+
+```bash
+./scripts/download_shards.sh
+```
+
+## Python Environment
+
+Use a project-local virtual environment in PyCharm and install dependencies from the repo metadata:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
