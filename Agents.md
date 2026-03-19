@@ -7,6 +7,7 @@ These instructions apply to work performed in this repository.
 - Continue to the next logical engineering step unless the user explicitly tells you to stop or redirect.
 - Make code changes directly rather than stopping at analysis when the next implementation step is clear.
 - Keep momentum through implementation, verification, commit, and push.
+- Preserve working conventions across sessions by recording durable workflow, reporting, and handoff rules in repository files rather than keeping them only in transient context.
 
 ## Git Workflow
 
@@ -20,6 +21,16 @@ These instructions apply to work performed in this repository.
 - Prefer the smallest defensible commit that leaves the repository in a coherent state.
 - When working in a single file, still shard commits by function, feature slice, or behavior change where practical.
 - Use clear commit messages that describe the specific unit of work.
+
+## Continuity And Memory
+
+- When a session establishes a new durable working convention, store it in `Agents.md`, `NEXT_STEPS.md`, `README.md`, or another appropriate tracked file before ending the work.
+- Keep `NEXT_STEPS.md` current enough that a new Codex session can resume with the same operational assumptions and current priorities.
+- Keep user-facing workflow changes in `README.md` when they affect how the repository should be used.
+- Use timestamp-prefixed report filenames in KST format `YYYYMMDDHHMM_*` for report artifacts stored in the repository.
+- If the user types `milestone`, treat that as an instruction to record the current state for the next Codex context.
+- On `milestone`, update the relevant tracked memory files for the work that was completed, especially `NEXT_STEPS.md`, `README.md`, `Agents.md`, and report files when applicable.
+- On `milestone`, commit and push those updates using the repository's split-commit policy instead of bundling all persistence changes together.
 
 ## Data Layout
 
