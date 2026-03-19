@@ -1,10 +1,14 @@
-# Data folders
+# Local IDE files
+.idea/
+
+# Raw and processed Borg datasets
 borg_data/
 borg_processed/
-*.parquet
-*.json.gz
 
-# Python
+# Python artifacts
 __pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
 venv/
-.env
