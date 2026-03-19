@@ -62,12 +62,53 @@ def weights_file() -> Path:
     return OUTPUT_DIR / "weights.json"
 
 
+def load_forecaster_data(clusters: list[str]) -> pl.DataFrame:
+    frames = []
+    for cluster_id in clusters:
+        path = forecaster_file(cluster_id)
+        if not path.exists():
+            print(f"Skipping {cluster_id}: missing {path.name}")
+            continue
+        frames.append(pl.read_parquet(path))
+
+    if not frames:
+        raise FileNotFoundError("No forecaster parquet files were found for the requested clusters.")
+
+    return pl.concat(frames, how="vertical_relaxed")
+
+
+def split_by_time(frame: pl.DataFrame, valid_fraction: float) -> tuple[pl.DataFrame, pl.DataFrame, int]:
+    if not 0.0 < valid_fraction < 1.0:
+        raise ValueError("Validation fraction must be between 0 and 1.")
+
+    split_time = (
+        frame
+        .select(pl.col("end_time").quantile(1.0 - valid_fraction).alias("split_time"))
+        .item()
+    )
+
+    train_df = frame.filter(pl.col("end_time") < split_time)
+    valid_df = frame.filter(pl.col("end_time") >= split_time)
+    return train_df, valid_df, int(split_time)
+
+
 def main() -> None:
+    clusters = parse_clusters()
+    valid_fraction = validation_fraction()
+
     print(f"Reading forecaster datasets from: {FORECASTER_DIR}")
     print(f"Writing baseline artifacts to: {OUTPUT_DIR}")
-    print(f"Clusters: {parse_clusters()}")
-    print(f"Validation fraction: {validation_fraction()}")
+    print(f"Clusters: {clusters}")
+    print(f"Validation fraction: {valid_fraction}")
     print(f"Features: {feature_names()}")
+
+    frame = load_forecaster_data(clusters)
+    train_df, valid_df, split_time = split_by_time(frame, valid_fraction)
+
+    print(f"Loaded rows: {frame.height}")
+    print(f"Split timestamp: {split_time}")
+    print(f"Train rows: {train_df.height}")
+    print(f"Validation rows: {valid_df.height}")
 
 
 if __name__ == "__main__":
