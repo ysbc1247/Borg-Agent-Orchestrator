@@ -33,6 +33,9 @@ export BORG_PROCESSED_DIR=~/Documents/borg_processed
 python scripts/data_flattener.py
 ```
 
+By default, the project processes clusters `b` through `g`.
+Clusters `a` and `h` are excluded because their flattened usage schemas differ from the main dataset group.
+
 To download shards into the default external location:
 
 ```bash
