@@ -156,9 +156,10 @@ Recommended next sequence:
 Current raw-data expansion note:
 
 - The downloader supports `sample`, `target_bytes`, and `all` modes.
+- `target_bytes` now builds coherent cluster slices by completing machine and event context for a cluster before adding that cluster's usage shards.
 - A `100 GB` raw target can be reached from the current `6.91 GB` baseline by downloading additional upstream shards.
 - For cluster `b` alone, upstream contains `49` `instance_events` shards and `1,463` `instance_usage` shards.
-- Downloading through cluster `b` usage shard `000000000170` would project the raw starting set to about `100.46 GB`.
+- The acceptable stopping window can be widened with `BORG_TARGET_TOLERANCE_BYTES`, for example `100 GB` target plus `50 GB` tolerance for a practical `50–150 GB` outcome band.
 - The advanced-track directory root is now `~/Documents/borg_xgboost_workspace`, and the XGBoost/raw-expansion work should use that root rather than the original baseline directories.
 
 ## Suggested Commit Shards For Next Session

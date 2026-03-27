@@ -68,6 +68,7 @@ To expand the raw starting set toward a bounded target size such as `100 GB`, us
 ```bash
 BORG_DOWNLOAD_MODE=target_bytes \
 BORG_TARGET_RAW_BYTES=100000000000 \
+BORG_TARGET_TOLERANCE_BYTES=50000000000 \
 ./scripts/download_shards.sh
 ```
 
@@ -77,9 +78,11 @@ Download behavior notes:
 
 - Default clusters are `b` through `g`
 - `sample` mode downloads shard `000000000000` for each of `events`, `usage`, and `machines`
-- `target_bytes` mode keeps downloading additional raw shards until the local raw-data directory reaches the requested byte target
+- `target_bytes` mode builds coherent cluster slices: all machine shards for a cluster, then all event shards for that cluster, then usage shards for that same cluster
+- `target_bytes` stops only after finishing a usage shard once the raw-data directory is between `target` and `target + tolerance`
 - `all` mode downloads every matching raw shard for the selected clusters
 - New multi-shard files are stored as `cluster_type-<shard>.json.gz`, for example `b_usage-000000000170.json.gz`
+- A practical `50–150 GB` band can be expressed as `BORG_TARGET_RAW_BYTES=100000000000` and `BORG_TARGET_TOLERANCE_BYTES=50000000000`
 
 To build joined per-window datasets for clusters `b` through `g`:
 
