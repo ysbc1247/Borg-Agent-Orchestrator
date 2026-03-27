@@ -23,6 +23,11 @@ mkdir -p \
   "${ADVANCED_ROOT}/runtime/tmp" \
   "${ADVANCED_ROOT}/config"
 
+if [[ ! -f "${ADVANCED_ROOT}/config/advanced_xgboost.env" ]]; then
+  cp "$(cd "$(dirname "$0")/.." && pwd)/config/advanced_xgboost.env.example" \
+    "${ADVANCED_ROOT}/config/advanced_xgboost.env"
+fi
+
 cat > "${ADVANCED_ROOT}/README.md" <<EOF
 # Advanced Borg XGBoost Workspace
 
@@ -44,6 +49,9 @@ Recommended environment variables:
 - BORG_XGBOOST_MODEL_DIR=${ADVANCED_ROOT}/models/xgboost
 - BORG_REPORT_DIR=${ADVANCED_ROOT}/reports
 - TMPDIR=${ADVANCED_ROOT}/runtime/tmp
+- BORG_DOWNLOAD_MODE=target_bytes
+- BORG_TARGET_RAW_BYTES=100000000000
+- BORG_TARGET_TOLERANCE_BYTES=50000000000
 
 Keep this workspace separate from:
 
