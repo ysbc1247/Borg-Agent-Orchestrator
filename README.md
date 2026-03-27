@@ -110,6 +110,7 @@ That pipeline is intentionally separate from the baseline forecaster flow:
 - It writes XGBoost models and metrics under `~/Documents/borg_xgboost_workspace/models/xgboost`
 - It keeps the same high-level target family: risk scoring for failures/errors within the configured prediction horizon
 - It keeps label-valid rows with missing features, adds explicit `*_is_missing` indicators for key features, and lets XGBoost consume numeric nulls as missing values instead of dropping whole joined rows
+- It now supports multiple forecast horizons from the same joined dataset and feature parquet, with default labels for `15`, `30`, `45`, and `60` minutes
 
 You can also run the advanced stages separately:
 
