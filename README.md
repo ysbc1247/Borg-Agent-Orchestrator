@@ -43,8 +43,7 @@ For the advanced-model track, create and use a fully separate workspace:
 
 ```bash
 ./scripts/setup_advanced_xgboost_workspace.sh
-cp config/advanced_xgboost.env.example ~/Documents/borg_xgboost_workspace/config/advanced_xgboost.env
-source ~/Documents/borg_xgboost_workspace/config/advanced_xgboost.env
+./scripts/run_advanced_download.sh
 ```
 
 That workspace keeps the second ML task isolated from the first baseline task:
@@ -73,6 +72,14 @@ BORG_TARGET_TOLERANCE_BYTES=50000000000 \
 ```
 
 If you are running the advanced track, source the advanced env file first so this download lands in `~/Documents/borg_xgboost_workspace/raw` instead of the baseline sample directories.
+
+If you want a one-command advanced download, just run:
+
+```bash
+./scripts/run_advanced_download.sh
+```
+
+That wrapper creates the advanced workspace if needed, creates `~/Documents/borg_xgboost_workspace/config/advanced_xgboost.env` if missing, loads it, and then starts the coherent target-based download.
 
 Download behavior notes:
 

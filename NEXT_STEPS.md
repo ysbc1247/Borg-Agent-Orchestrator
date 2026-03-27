@@ -161,6 +161,7 @@ Current raw-data expansion note:
 - For cluster `b` alone, upstream contains `49` `instance_events` shards and `1,463` `instance_usage` shards.
 - The acceptable stopping window can be widened with `BORG_TARGET_TOLERANCE_BYTES`, for example `100 GB` target plus `50 GB` tolerance for a practical `50–150 GB` outcome band.
 - The advanced-track directory root is now `~/Documents/borg_xgboost_workspace`, and the XGBoost/raw-expansion work should use that root rather than the original baseline directories.
+- `scripts/run_advanced_download.sh` now provides a one-command entrypoint that auto-loads the advanced env file and runs the coherent downloader into the isolated advanced workspace.
 
 ## Suggested Commit Shards For Next Session
 
