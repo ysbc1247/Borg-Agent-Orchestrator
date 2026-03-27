@@ -7,6 +7,7 @@ CLUSTERS_RAW="${BORG_CLUSTERS:-b,c,d,e,f,g}"
 DOWNLOAD_MODE="${BORG_DOWNLOAD_MODE:-sample}"
 TARGET_RAW_BYTES="${BORG_TARGET_RAW_BYTES:-100000000000}"
 BORG_TARGET_TOLERANCE_BYTES="${BORG_TARGET_TOLERANCE_BYTES:-50000000000}"
+BORG_DOWNLOAD_SHARD_COUNT="${BORG_DOWNLOAD_SHARD_COUNT:-15}"
 GSUTIL_OPTS=(-o "GSUtil:parallel_process_count=1")
 
 typeset -a CLUSTERS
@@ -139,6 +140,40 @@ download_until_target() {
   echo "Remote data exhausted before reaching target."
 }
 
+
+download_fixed_shards() {
+  local cluster="$1"
+  local shard_count="$2"
+
+  echo "-----------------------------------------------"
+  echo "Processing cluster ${cluster} with fixed shard count ${shard_count}..."
+
+  download_object "${cluster}" "machine_events-000000000000.json.gz" "machines" "machines"
+
+  local remote_name
+  local event_index=0
+  while IFS= read -r remote_path; do
+    [[ -z "${remote_path}" ]] && continue
+    remote_name="${remote_path:t}"
+    download_object "${cluster}" "${remote_name}" "events" "events"
+    event_index=$(( event_index + 1 ))
+    if (( event_index >= shard_count )); then
+      break
+    fi
+  done < <(gsutil ls "gs://clusterdata_2019_${cluster}/instance_events-*.json.gz" | sort)
+
+  local usage_index=0
+  while IFS= read -r remote_path; do
+    [[ -z "${remote_path}" ]] && continue
+    remote_name="${remote_path:t}"
+    download_object "${cluster}" "${remote_name}" "usage" "usage"
+    usage_index=$(( usage_index + 1 ))
+    if (( usage_index >= shard_count )); then
+      break
+    fi
+  done < <(gsutil ls "gs://clusterdata_2019_${cluster}/instance_usage-*.json.gz" | sort)
+}
+
 echo "Clusters: ${CLUSTERS[*]}"
 echo "Download mode: ${DOWNLOAD_MODE}"
 
@@ -162,9 +197,15 @@ case "${DOWNLOAD_MODE}" in
   target_bytes)
     download_until_target
     ;;
+  fixed_shards)
+    echo "Fixed shard count per cluster: ${BORG_DOWNLOAD_SHARD_COUNT}"
+    for cluster in "${CLUSTERS[@]}"; do
+      download_fixed_shards "${cluster}" "${BORG_DOWNLOAD_SHARD_COUNT}"
+    done
+    ;;
   *)
     echo "Unsupported BORG_DOWNLOAD_MODE=${DOWNLOAD_MODE}" >&2
-    echo "Use one of: sample, all, target_bytes" >&2
+    echo "Use one of: sample, all, target_bytes, fixed_shards" >&2
     exit 1
     ;;
 esac
