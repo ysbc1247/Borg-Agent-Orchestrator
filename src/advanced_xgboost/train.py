@@ -5,10 +5,11 @@ import math
 import os
 from pathlib import Path
 
+import numpy as np
 import polars as pl
 from xgboost import XGBClassifier
 
-from src.advanced_xgboost.features import ADVANCED_FEATURE_COLUMNS
+from src.advanced_xgboost.features import ADVANCED_FEATURE_COLUMNS, MISSINGNESS_FLAG_COLUMNS
 from src.advanced_xgboost.settings import model_dir, report_dir
 
 
@@ -88,14 +89,20 @@ def split_by_time(frame: pl.DataFrame, valid_fraction: float) -> tuple[pl.DataFr
 
 
 def prepare_matrix(frame: pl.DataFrame) -> tuple[list[list[float]], list[int]]:
-    filled = frame.with_columns(
+    matrix_frame = frame.with_columns(
         [
-            pl.col(column).cast(pl.Float64, strict=False).fill_null(0.0).alias(column)
-            for column in ADVANCED_FEATURE_COLUMNS
+            (
+                pl.col(column)
+                .cast(pl.Float64, strict=False)
+                .fill_null(float("nan"))
+                .alias(column)
+            )
+            for column in ADVANCED_FEATURE_COLUMNS + MISSINGNESS_FLAG_COLUMNS
         ]
     )
-    x = filled.select(list(ADVANCED_FEATURE_COLUMNS)).to_numpy()
-    y = filled.get_column("target_failure_15m").cast(pl.Int64).to_list()
+    x = matrix_frame.select(list(ADVANCED_FEATURE_COLUMNS + MISSINGNESS_FLAG_COLUMNS)).to_numpy()
+    x = np.asarray(x, dtype=np.float32)
+    y = matrix_frame.get_column("target_failure_15m").cast(pl.Int64).to_list()
     return x, y
 
 

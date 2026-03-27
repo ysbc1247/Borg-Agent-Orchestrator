@@ -58,6 +58,38 @@ ADVANCED_FEATURE_COLUMNS = (
     "max_mem_utilization_roll3_mean",
 )
 
+MISSINGNESS_BASE_COLUMNS = (
+    "avg_cpu",
+    "max_cpu",
+    "avg_mem",
+    "max_mem",
+    "avg_cpu_utilization",
+    "max_cpu_utilization",
+    "avg_mem_utilization",
+    "max_mem_utilization",
+    "req_cpu",
+    "req_mem",
+    "priority",
+    "scheduling_class",
+    "event_count",
+    "task_age_us",
+    "time_since_last_event_us",
+    "machine_cpu",
+    "machine_mem",
+    "cpu_request_ratio",
+    "mem_request_ratio",
+    "avg_cpu_to_request_ratio",
+    "avg_mem_to_request_ratio",
+    "max_cpu_to_request_ratio",
+    "max_mem_to_request_ratio",
+    "cpu_headroom",
+    "mem_headroom",
+    "cpu_spike_gap",
+    "mem_spike_gap",
+)
+
+MISSINGNESS_FLAG_COLUMNS = tuple(f"{column}_is_missing" for column in MISSINGNESS_BASE_COLUMNS)
+
 
 def safe_ratio(numerator: str, denominator: str, alias: str) -> pl.Expr:
     return (
@@ -136,6 +168,12 @@ def build_feature_frame(dataset: pl.LazyFrame, failure_event_types: list[int], h
                 ).alias("terminal_event_before_window_end"),
             ]
         )
+        .with_columns(
+            [
+                pl.col(column).is_null().cast(pl.Int8).alias(f"{column}_is_missing")
+                for column in MISSINGNESS_BASE_COLUMNS
+            ]
+        )
     )
 
     return enriched.select(
@@ -148,6 +186,7 @@ def build_feature_frame(dataset: pl.LazyFrame, failure_event_types: list[int], h
             pl.col("end_time"),
             pl.col("source_cluster"),
             *[pl.col(column) for column in ADVANCED_FEATURE_COLUMNS],
+            *[pl.col(column) for column in MISSINGNESS_FLAG_COLUMNS],
             pl.col("first_event_time"),
             pl.col("last_event_time"),
             pl.col("final_event_type"),
