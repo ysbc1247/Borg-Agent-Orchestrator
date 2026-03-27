@@ -166,7 +166,7 @@ Current raw-data expansion note:
 - The advanced-model source tree is now separated under `src/advanced_xgboost` with dedicated scripts `scripts/build_advanced_xgboost_dataset.py`, `scripts/train_advanced_xgboost.py`, and `scripts/run_advanced_xgboost_pipeline.sh`.
 - The advanced XGBoost missing-data policy is now: keep label-valid rows, preserve numeric nulls into XGBoost, and add explicit missingness indicator features rather than dropping whole joined rows.
 - Step wrappers now exist for the isolated advanced pipeline: `scripts/run_advanced_flatten.sh`, `scripts/run_advanced_join.sh`, `scripts/run_advanced_feature_build.sh`, `scripts/run_advanced_train.sh`, and the full-chain `scripts/run_advanced_xgboost_pipeline.sh`.
-- The advanced feature parquet now carries multiple target columns for default horizons `15m`, `30m`, `45m`, and `60m`, and the trainer fits one XGBoost model per target column without requiring separate joined datasets.
+- The advanced feature parquet now carries multiple target columns for default horizons `5m`, `15m`, `30m`, `45m`, and `60m`, and the trainer fits one XGBoost model per target column without requiring separate joined datasets.
 
 ## Suggested Commit Shards For Next Session
 
