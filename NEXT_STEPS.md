@@ -157,6 +157,7 @@ Current raw-data expansion note:
 
 - The downloader supports `sample`, `target_bytes`, and `all` modes.
 - `target_bytes` now builds coherent cluster slices by completing machine and event context for a cluster before adding that cluster's usage shards.
+- The advanced env now defaults to `fixed_shards` with `BORG_DOWNLOAD_SHARD_COUNT=15`, which means the first `15` event and usage shards per cluster for `b` through `g`.
 - A `100 GB` raw target can be reached from the current `6.91 GB` baseline by downloading additional upstream shards.
 - For cluster `b` alone, upstream contains `49` `instance_events` shards and `1,463` `instance_usage` shards.
 - The acceptable stopping window can be widened with `BORG_TARGET_TOLERANCE_BYTES`, for example `100 GB` target plus `50 GB` tolerance for a practical `50–150 GB` outcome band.

@@ -82,6 +82,21 @@ If you want a one-command advanced download, just run:
 
 That wrapper creates the advanced workspace if needed, creates `~/Documents/borg_xgboost_workspace/config/advanced_xgboost.env` if missing, loads it, and then starts the coherent target-based download.
 
+For the current advanced setup, the default is now a fixed matched-shard plan rather than a byte target:
+
+- clusters: `b` through `g`
+- machine shards: `000000000000`
+- event shards: first `15` per cluster
+- usage shards: first `15` per cluster
+- existing files are skipped automatically
+
+This is intended to approximate the static `90 GB` plan you asked for:
+
+- `0.5 GB` events + `0.5 GB` usage per shard index
+- `15` shard indices
+- `6` clusters
+- about `90 GB` total, ignoring machine size
+
 To build the separated advanced feature set and train the XGBoost failure-risk model, run:
 
 ```bash
@@ -101,6 +116,7 @@ Download behavior notes:
 - `sample` mode downloads shard `000000000000` for each of `events`, `usage`, and `machines`
 - `target_bytes` mode builds coherent cluster slices: all machine shards for a cluster, then all event shards for that cluster, then usage shards for that same cluster
 - `target_bytes` stops only after finishing a usage shard once the raw-data directory is between `target` and `target + tolerance`
+- `fixed_shards` mode downloads one machine shard plus the first `N` event shards and first `N` usage shards per cluster, where `N=BORG_DOWNLOAD_SHARD_COUNT`
 - `all` mode downloads every matching raw shard for the selected clusters
 - New multi-shard files are stored as `cluster_type-<shard>.json.gz`, for example `b_usage-000000000170.json.gz`
 - A practical `50–150 GB` band can be expressed as `BORG_TARGET_RAW_BYTES=100000000000` and `BORG_TARGET_TOLERANCE_BYTES=50000000000`
