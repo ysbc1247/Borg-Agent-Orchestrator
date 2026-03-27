@@ -167,6 +167,7 @@ Current raw-data expansion note:
 - The advanced XGBoost missing-data policy is now: keep label-valid rows, preserve numeric nulls into XGBoost, and add explicit missingness indicator features rather than dropping whole joined rows.
 - Step wrappers now exist for the isolated advanced pipeline: `scripts/run_advanced_flatten.sh`, `scripts/run_advanced_join.sh`, `scripts/run_advanced_feature_build.sh`, `scripts/run_advanced_train.sh`, and the full-chain `scripts/run_advanced_xgboost_pipeline.sh`.
 - The advanced feature parquet now carries multiple target columns for default horizons `5m`, `15m`, `30m`, `45m`, and `60m`, and the trainer fits one XGBoost model per target column without requiring separate joined datasets.
+- `scripts/setup_advanced_runtime.sh` now prepares a repo-local `.venv`, and the advanced wrappers use that interpreter plus `PYTHONPATH` so the isolated pipeline can run immediately after downloads finish.
 
 ## Suggested Commit Shards For Next Session
 

@@ -42,6 +42,7 @@ python scripts/data_flattener.py
 For the advanced-model track, create and use a fully separate workspace:
 
 ```bash
+./scripts/setup_advanced_runtime.sh
 ./scripts/setup_advanced_xgboost_workspace.sh
 ./scripts/run_advanced_download.sh
 ```
@@ -119,6 +120,12 @@ You can also run the advanced stages separately:
 ./scripts/run_advanced_join.sh
 ./scripts/run_advanced_feature_build.sh
 ./scripts/run_advanced_train.sh
+```
+
+Before running those stages for the first time, install the repo-local Python runtime once:
+
+```bash
+./scripts/setup_advanced_runtime.sh
 ```
 
 Download behavior notes:
