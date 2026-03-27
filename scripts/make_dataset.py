@@ -10,6 +10,7 @@ DEFAULT_CLUSTERS = ("b", "c", "d", "e", "f", "g")
 PROCESSED_DIR = Path(os.environ.get("BORG_PROCESSED_DIR", DEFAULT_PROCESSED_DIR)).expanduser()
 DATASET_DIR = Path(os.environ.get("BORG_DATASET_DIR", DEFAULT_DATASET_DIR)).expanduser()
 DATASET_DIR.mkdir(parents=True, exist_ok=True)
+FLAT_SHARD_DIR = PROCESSED_DIR / "flat_shards"
 
 
 def parse_clusters() -> list[str]:
@@ -47,12 +48,31 @@ def cluster_file(cluster_id: str, suffix: str) -> Path:
     return PROCESSED_DIR / f"{cluster_id}_{suffix}.parquet"
 
 
+def sharded_cluster_glob(cluster_id: str, suffix: str) -> str:
+    kind = {"events": "events", "machines": "machines", "usage": "usage"}[suffix]
+    return str(FLAT_SHARD_DIR / kind / cluster_id / "*.parquet")
+
+
+def cluster_source_exists(cluster_id: str, suffix: str) -> bool:
+    shard_dir = FLAT_SHARD_DIR / suffix / cluster_id
+    if shard_dir.exists() and any(shard_dir.glob("*.parquet")):
+        return True
+    return cluster_file(cluster_id, suffix).exists()
+
+
+def cluster_source(cluster_id: str, suffix: str) -> str:
+    shard_dir = FLAT_SHARD_DIR / suffix / cluster_id
+    if shard_dir.exists() and any(shard_dir.glob("*.parquet")):
+        return sharded_cluster_glob(cluster_id, suffix)
+    return str(cluster_file(cluster_id, suffix))
+
+
 def dataset_file(cluster_id: str) -> Path:
     return DATASET_DIR / f"{cluster_id}_dataset.parquet"
 
 
 def load_event_features(cluster_id: str) -> pl.LazyFrame:
-    events = pl.scan_parquet(cluster_file(cluster_id, "events"))
+    events = pl.scan_parquet(cluster_source(cluster_id, "events"))
 
     return (
         events
@@ -95,7 +115,7 @@ def load_event_features(cluster_id: str) -> pl.LazyFrame:
 
 
 def load_machine_features(cluster_id: str) -> pl.LazyFrame:
-    machines = pl.scan_parquet(cluster_file(cluster_id, "machines"))
+    machines = pl.scan_parquet(cluster_source(cluster_id, "machines"))
 
     return (
         machines
@@ -127,7 +147,7 @@ def load_machine_features(cluster_id: str) -> pl.LazyFrame:
 
 
 def load_usage_features(cluster_id: str) -> pl.LazyFrame:
-    usage = pl.scan_parquet(cluster_file(cluster_id, "usage"))
+    usage = pl.scan_parquet(cluster_source(cluster_id, "usage"))
     schema_names = set(usage.collect_schema().names())
 
     return (
@@ -206,20 +226,16 @@ def main() -> None:
     print(f"Clusters: {clusters}")
 
     for cluster_id in clusters:
-        usage_path = cluster_file(cluster_id, "usage")
-        event_path = cluster_file(cluster_id, "events")
-        machine_path = cluster_file(cluster_id, "machines")
-
-        if not usage_path.exists():
-            print(f"Skipping {cluster_id}: missing {usage_path.name}")
+        if not cluster_source_exists(cluster_id, "usage"):
+            print(f"Skipping {cluster_id}: missing usage parquet")
             continue
 
-        if not event_path.exists():
-            print(f"Skipping {cluster_id}: missing {event_path.name}")
+        if not cluster_source_exists(cluster_id, "events"):
+            print(f"Skipping {cluster_id}: missing events parquet")
             continue
 
-        if not machine_path.exists():
-            print(f"Skipping {cluster_id}: missing {machine_path.name}")
+        if not cluster_source_exists(cluster_id, "machines"):
+            print(f"Skipping {cluster_id}: missing machines parquet")
             continue
 
         write_cluster_dataset(cluster_id)
