@@ -27,13 +27,14 @@ Advanced XGBoost track status:
 
 - Advanced workspace root: `~/Documents/borg_xgboost_workspace`
 - Advanced runtime wrappers now write timestamped stage logs under `~/Documents/borg_xgboost_workspace/runtime/logs`
-- Current live flatten log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331021002_advanced_flatten.log`
-- Current live pipeline log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331021002_advanced_pipeline.log`
-- Advanced flattening is currently in progress against the fixed-shard advanced download set
-- Current flattened advanced shard count: `56` non-`.DS_Store` parquet files
-- Current advanced flatten config: `BORG_FLATTEN_WORKERS=20`, `BORG_FLATTEN_HEARTBEAT_SECONDS=10`
-- Current advanced flatten behavior logs `started ...`, `done ...`, and `heartbeat completed=...` lines so active work is visible even when large event shards have not finished yet
-- Current observed bottleneck: large `events` shards remain slow because nested `resource_request` extraction still flows through `pl.Object` plus `map_elements(...)`
+- Latest successful advanced flatten log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331031358_advanced_flatten.log`
+- Latest join log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331031434_advanced_join.log`
+- Advanced flatten currently completed for the fixed-shard advanced set after regenerating corrupt and failed usage parquet shards
+- Current flattened advanced shard count: `186` non-`.DS_Store` parquet files
+- Current advanced flatten config: `BORG_FLATTEN_WORKERS=8`, `BORG_FLATTEN_HEARTBEAT_SECONDS=10`
+- Advanced flatten now uses `scan_ndjson(...).sink_parquet(...)` for shard processing and logs `started ...`, `done ...`, and `heartbeat completed=...`
+- Current blocker moved downstream: `scripts/make_dataset.py` fails during join with `polars.exceptions.SchemaError: data type mismatch for column time: incoming: Int64 != target: String`
+- Current joined dataset directory `~/Documents/borg_xgboost_workspace/processed/datasets` is still empty because the join stage has not completed successfully yet
 
 Completed stages:
 
@@ -152,7 +153,7 @@ Latest milestone checkpoint:
 
 - `reports/202603271632_milestone.md`
 - Use it together with `Agents.md` and this file when resuming in a new Codex context
-- Latest advanced handoff snapshot: `reports/202603310236_advanced_flatten_handoff.md`
+- Latest advanced handoff snapshot: `reports/202603310315_advanced_pipeline_handoff.md`
 
 ## Immediate Next Steps
 
@@ -161,9 +162,11 @@ The immediate next engineering work is now to let the advanced flatten run compl
 Recommended next sequence:
 
 1. Let `./scripts/run_advanced_xgboost_pipeline.sh` continue the current flatten run from `~/Documents/borg_xgboost_workspace/runtime/logs/20260331021002_advanced_flatten.log`.
-2. If advanced flatten remains throughput-limited, optimize event flattening by replacing the current `pl.Object` plus `map_elements(...)` path for `resource_request` with a more native extraction path.
-3. When flatten completes, let the queued pipeline continue into `./scripts/run_advanced_join.sh`, `./scripts/run_advanced_feature_build.sh`, and `./scripts/run_advanced_train.sh`.
-4. Review per-horizon model artifacts for `5m`, `15m`, `30m`, `45m`, and `60m`.
+2. Fix the join-stage schema mismatch in `scripts/make_dataset.py` so mixed shard schemas agree on `time`/event columns across the advanced flat-shard parquet set.
+3. Rerun `./scripts/run_advanced_join.sh`.
+4. Then run `./scripts/run_advanced_feature_build.sh`.
+5. Then run `./scripts/run_advanced_train.sh`.
+6. Review per-horizon model artifacts for `5m`, `15m`, `30m`, `45m`, and `60m`.
 
 Current raw-data expansion note:
 
