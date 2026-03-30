@@ -82,7 +82,7 @@ def safe_extract_expr(schema: dict[str, pl.DataType], root_col: str, field_name:
     return pl.lit(None).cast(pl.Float64).alias(new_name)
 
 
-def read_ndjson_permissive(path: Path, kind: str) -> pl.DataFrame:
+def scan_ndjson_permissive(path: Path, kind: str) -> pl.LazyFrame:
     schema_overrides: dict[str, pl.DataType] = {}
 
     if kind == "usage":
@@ -122,12 +122,11 @@ def read_ndjson_permissive(path: Path, kind: str) -> pl.DataFrame:
             "type": pl.Int64,
             "capacity": CPU_MEM_STRUCT,
         }
-    return pl.read_ndjson(
+    return pl.scan_ndjson(
         path,
         infer_schema_length=10000,
         schema_overrides=schema_overrides,
         ignore_errors=True,
-        low_memory=False,
     )
 
 
@@ -138,30 +137,33 @@ def process_shard(cluster_id: str, kind: str, raw_path_str: str) -> str:
     if out_path.exists():
         return f"skip {kind} {cluster_id} {raw_path.name}"
 
-    df = read_ndjson_permissive(raw_path, kind)
-    schema = df.schema
+    lf = scan_ndjson_permissive(raw_path, kind)
+    schema_names = set(lf.collect_schema().names())
 
     if kind == "machines":
-        if "capacity" not in schema:
+        if "capacity" not in schema_names:
             return f"skip-empty {kind} {cluster_id} {raw_path.name}"
-        df = df.with_columns([
-            safe_extract_expr(schema, "capacity", "cpus", "machine_cpu"),
-            safe_extract_expr(schema, "capacity", "memory", "machine_mem"),
-        ]).drop("capacity")
-        df = df.filter(pl.col("machine_cpu").is_not_null())
+        lf = (
+            lf.with_columns([
+                pl.col("capacity").struct.field("cpus").cast(pl.Float64, strict=False).alias("machine_cpu"),
+                pl.col("capacity").struct.field("memory").cast(pl.Float64, strict=False).alias("machine_mem"),
+            ])
+            .drop("capacity")
+            .filter(pl.col("machine_cpu").is_not_null())
+        )
     elif kind == "events":
-        df = df.with_columns([
-            safe_extract_expr(schema, "resource_request", "cpus", "req_cpu"),
-            safe_extract_expr(schema, "resource_request", "memory", "req_mem"),
+        lf = lf.with_columns([
+            pl.col("resource_request").struct.field("cpus").cast(pl.Float64, strict=False).alias("req_cpu"),
+            pl.col("resource_request").struct.field("memory").cast(pl.Float64, strict=False).alias("req_mem"),
         ])
-        cols_to_drop = [c for c in ["resource_request", "constraint"] if c in df.columns]
-        df = df.drop(cols_to_drop)
+        cols_to_drop = [c for c in ["resource_request", "constraint"] if c in schema_names]
+        lf = lf.drop(cols_to_drop)
     elif kind == "usage":
-        df = df.with_columns([
-            safe_extract_expr(schema, "average_usage", "cpus", "avg_cpu"),
-            safe_extract_expr(schema, "average_usage", "memory", "avg_mem"),
-            safe_extract_expr(schema, "maximum_usage", "cpus", "max_cpu"),
-            safe_extract_expr(schema, "maximum_usage", "memory", "max_mem"),
+        lf = lf.with_columns([
+            pl.col("average_usage").struct.field("cpus").cast(pl.Float64, strict=False).alias("avg_cpu"),
+            pl.col("average_usage").struct.field("memory").cast(pl.Float64, strict=False).alias("avg_mem"),
+            pl.col("maximum_usage").struct.field("cpus").cast(pl.Float64, strict=False).alias("max_cpu"),
+            pl.col("maximum_usage").struct.field("memory").cast(pl.Float64, strict=False).alias("max_mem"),
         ])
         to_drop = [
             "average_usage",
@@ -170,10 +172,10 @@ def process_shard(cluster_id: str, kind: str, raw_path_str: str) -> str:
             "cycles_per_instruction",
             "memory_accesses_per_1000_instructions",
         ]
-        existing_drop = [c for c in to_drop if c in df.columns]
-        df = df.drop(existing_drop).with_columns(pl.lit(cluster_id).alias("cluster_id"))
+        existing_drop = [c for c in to_drop if c in schema_names]
+        lf = lf.drop(existing_drop).with_columns(pl.lit(cluster_id).alias("cluster_id"))
 
-    df.write_parquet(out_path)
+    lf.sink_parquet(out_path)
     return f"done {kind} {cluster_id} {raw_path.name} -> {out_path.name}"
 
 
