@@ -118,9 +118,23 @@ You can also run the advanced stages separately:
 ```bash
 ./scripts/run_advanced_flatten.sh
 ./scripts/run_advanced_join.sh
+./scripts/run_advanced_join_resumable.sh
 ./scripts/run_advanced_feature_build.sh
+./scripts/run_advanced_feature_build_resumable.sh
 ./scripts/run_advanced_train.sh
+./scripts/run_advanced_train_resumable.sh
 ```
+
+For long unattended runs on the advanced track, prefer the resumable wrappers:
+
+- `run_advanced_join_resumable.sh` skips clusters whose joined parquet already exists
+- `run_advanced_feature_build_resumable.sh` skips clusters whose feature parquet already exists
+- `run_advanced_train_resumable.sh` skips target horizons whose model and metrics artifacts already exist
+
+The advanced trainer now uses bounded deterministic negative sampling so it can train on the full multi-cluster feature store within a laptop memory budget while still keeping all positive examples in each train/validation split. Default caps are:
+
+- `BORG_XGB_MAX_TRAIN_ROWS=8000000`
+- `BORG_XGB_MAX_VALID_ROWS=2000000`
 
 Before running those stages for the first time, install the repo-local Python runtime once:
 

@@ -29,6 +29,8 @@ Advanced XGBoost track status:
 - Advanced runtime wrappers now write timestamped stage logs under `~/Documents/borg_xgboost_workspace/runtime/logs`
 - Latest successful advanced flatten log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331031358_advanced_flatten.log`
 - Latest join log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331035719_advanced_join_resumable.log`
+- Latest advanced feature-build log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331040043_advanced_feature_build.log`
+- Latest advanced train log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331041159_advanced_train_resumable.log`
 - Advanced flatten currently completed for the fixed-shard advanced set after regenerating corrupt and failed usage parquet shards
 - Current flattened advanced shard count: `186` non-`.DS_Store` parquet files
 - Current advanced flatten config: `BORG_FLATTEN_WORKERS=8`, `BORG_FLATTEN_HEARTBEAT_SECONDS=10`
@@ -36,6 +38,8 @@ Advanced XGBoost track status:
 - Join-stage schema mismatch is fixed in `scripts/make_dataset.py` by normalizing each shard lazily before concatenation, so mixed shard schemas no longer crash `scan_parquet`
 - Advanced usage flattening bug is fixed in `scripts/data_flattener.py` by casting quoted numeric NDJSON fields after scan instead of relying on `schema_overrides` for string-backed IDs/timestamps
 - Advanced join rerun is now complete for clusters `b` through `g`
+- Advanced feature build is now complete for clusters `b` through `g`
+- Advanced training is now in progress under the resumable target-by-target runner
 - Latest joined row counts:
   - `b`: `62,116,886`
   - `c`: `66,758,768`
@@ -43,6 +47,16 @@ Advanced XGBoost track status:
   - `e`: `58,784,525`
   - `f`: `71,298,784`
   - `g`: `61,083,781`
+- Current feature-build label totals:
+  - `b`: non-zero positives for all configured horizons
+  - `c`: non-zero positives for all configured horizons
+  - `d`: non-zero positives for all configured horizons
+  - `e`: zero positives for `5m`, `15m`, `30m`, `45m`, and `60m`
+  - `f`: zero positives for `5m`, `15m`, `30m`, `45m`, and `60m`
+  - `g`: zero positives for `5m`, `15m`, `30m`, `45m`, and `60m`
+- Current training progress:
+  - `target_failure_5m` completed successfully
+  - `target_failure_15m` is currently running
 
 Completed stages:
 
@@ -170,9 +184,9 @@ The immediate next engineering work is now to let the advanced flatten run compl
 Recommended next sequence:
 
 1. Let `./scripts/run_advanced_xgboost_pipeline.sh` continue the current flatten run from `~/Documents/borg_xgboost_workspace/runtime/logs/20260331021002_advanced_flatten.log`.
-2. Run `./scripts/run_advanced_feature_build.sh`.
-3. Run `./scripts/run_advanced_train.sh`.
-4. Review per-horizon model artifacts for `5m`, `15m`, `30m`, `45m`, and `60m`.
+2. Let `./scripts/run_advanced_train_resumable.sh` finish the remaining horizons `15m`, `30m`, `45m`, and `60m`.
+3. Review per-horizon model artifacts for `5m`, `15m`, `30m`, `45m`, and `60m`.
+4. Investigate why clusters `e`, `f`, and `g` contain zero positives in the current fixed-shard advanced slice.
 
 Current raw-data expansion note:
 
@@ -193,6 +207,8 @@ Current raw-data expansion note:
 - Mixed-schema advanced parquet shards are now normalized in the joiner per file before concatenation, which avoids `polars.exceptions.SchemaError` when earlier shards were written with string-typed IDs/timestamps.
 - Advanced NDJSON flattening now casts quoted numeric scalar fields after scan, because `scan_ndjson(..., schema_overrides=Int64)` was nulling usage IDs/timestamps for the fixed-shard advanced set.
 - The advanced joiner now has a resumable cluster-at-a-time wrapper `scripts/run_advanced_join_resumable.sh`, and removing the global pre-group sorts from event/machine aggregation reduced join wall time enough for the full advanced join to complete successfully.
+- The advanced feature and training stages now also have resumable wrappers: `scripts/run_advanced_feature_build_resumable.sh` and `scripts/run_advanced_train_resumable.sh`.
+- The advanced trainer no longer concatenates the entire feature store eagerly in memory; it now scans parquet lazily, keeps all positives, and deterministically downsamples negatives to bounded train/validation row caps so multi-cluster training fits on the local machine.
 
 ## Suggested Commit Shards For Next Session
 
