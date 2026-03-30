@@ -28,15 +28,21 @@ Advanced XGBoost track status:
 - Advanced workspace root: `~/Documents/borg_xgboost_workspace`
 - Advanced runtime wrappers now write timestamped stage logs under `~/Documents/borg_xgboost_workspace/runtime/logs`
 - Latest successful advanced flatten log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331031358_advanced_flatten.log`
-- Latest join log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331033021_advanced_join.log`
+- Latest join log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331035719_advanced_join_resumable.log`
 - Advanced flatten currently completed for the fixed-shard advanced set after regenerating corrupt and failed usage parquet shards
 - Current flattened advanced shard count: `186` non-`.DS_Store` parquet files
 - Current advanced flatten config: `BORG_FLATTEN_WORKERS=8`, `BORG_FLATTEN_HEARTBEAT_SECONDS=10`
 - Advanced flatten now uses `scan_ndjson(...).sink_parquet(...)` for shard processing and logs `started ...`, `done ...`, and `heartbeat completed=...`
 - Join-stage schema mismatch is fixed in `scripts/make_dataset.py` by normalizing each shard lazily before concatenation, so mixed shard schemas no longer crash `scan_parquet`
 - Advanced usage flattening bug is fixed in `scripts/data_flattener.py` by casting quoted numeric NDJSON fields after scan instead of relying on `schema_overrides` for string-backed IDs/timestamps
-- Current rerun status: `./scripts/run_advanced_join.sh` is in progress from log `~/Documents/borg_xgboost_workspace/runtime/logs/20260331033021_advanced_join.log`
-- Verified partial output: cluster `b` joined successfully with `62,116,886` rows at `~/Documents/borg_xgboost_workspace/processed/datasets/b_dataset.parquet`
+- Advanced join rerun is now complete for clusters `b` through `g`
+- Latest joined row counts:
+  - `b`: `62,116,886`
+  - `c`: `66,758,768`
+  - `d`: `64,764,425`
+  - `e`: `58,784,525`
+  - `f`: `71,298,784`
+  - `g`: `61,083,781`
 
 Completed stages:
 
@@ -164,10 +170,9 @@ The immediate next engineering work is now to let the advanced flatten run compl
 Recommended next sequence:
 
 1. Let `./scripts/run_advanced_xgboost_pipeline.sh` continue the current flatten run from `~/Documents/borg_xgboost_workspace/runtime/logs/20260331021002_advanced_flatten.log`.
-2. Let the current `./scripts/run_advanced_join.sh` rerun finish and verify row counts for clusters `c`, `d`, `e`, `f`, and `g`.
-3. Then run `./scripts/run_advanced_feature_build.sh`.
-4. Then run `./scripts/run_advanced_train.sh`.
-5. Review per-horizon model artifacts for `5m`, `15m`, `30m`, `45m`, and `60m`.
+2. Run `./scripts/run_advanced_feature_build.sh`.
+3. Run `./scripts/run_advanced_train.sh`.
+4. Review per-horizon model artifacts for `5m`, `15m`, `30m`, `45m`, and `60m`.
 
 Current raw-data expansion note:
 
@@ -187,6 +192,7 @@ Current raw-data expansion note:
 - The advanced runtime dependency issue on macOS is resolved by installing `libomp`, and `xgboost` now imports successfully from the repo-local `.venv`.
 - Mixed-schema advanced parquet shards are now normalized in the joiner per file before concatenation, which avoids `polars.exceptions.SchemaError` when earlier shards were written with string-typed IDs/timestamps.
 - Advanced NDJSON flattening now casts quoted numeric scalar fields after scan, because `scan_ndjson(..., schema_overrides=Int64)` was nulling usage IDs/timestamps for the fixed-shard advanced set.
+- The advanced joiner now has a resumable cluster-at-a-time wrapper `scripts/run_advanced_join_resumable.sh`, and removing the global pre-group sorts from event/machine aggregation reduced join wall time enough for the full advanced join to complete successfully.
 
 ## Suggested Commit Shards For Next Session
 
