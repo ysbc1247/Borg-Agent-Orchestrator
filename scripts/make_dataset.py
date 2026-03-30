@@ -226,7 +226,6 @@ def build_cluster_dataset(cluster_id: str) -> pl.DataFrame:
             ]
         )
         .with_columns(pl.lit(cluster_id).alias("source_cluster"))
-        .sort(["start_time", "collection_id", "instance_index"])
         .collect(engine="streaming")
     )
 
