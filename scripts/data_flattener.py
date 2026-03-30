@@ -58,9 +58,27 @@ def shard_output_path(cluster_id: str, kind: str, raw_path: Path) -> Path:
     return cluster_dir / f"{raw_name}.parquet"
 
 
-def safe_extract_expr(columns: list[str], root_col: str, field_name: str, new_name: str) -> pl.Expr:
-    if root_col in columns:
-        return pl.col(root_col).struct.field(field_name).cast(pl.Float64).alias(new_name)
+def safe_extract_expr(schema: dict[str, pl.DataType], root_col: str, field_name: str, new_name: str) -> pl.Expr:
+    if root_col not in schema:
+        return pl.lit(None).cast(pl.Float64).alias(new_name)
+
+    root_dtype = schema[root_col]
+
+    if root_dtype == pl.Object:
+        return (
+            pl.col(root_col)
+            .map_elements(
+                lambda value: float(value[field_name]) if isinstance(value, dict) and value.get(field_name) is not None else None,
+                return_dtype=pl.Float64,
+            )
+            .alias(new_name)
+        )
+
+    if isinstance(root_dtype, pl.Struct):
+        field_names = {field.name for field in root_dtype.fields}
+        if field_name in field_names:
+            return pl.col(root_col).struct.field(field_name).cast(pl.Float64).alias(new_name)
+
     return pl.lit(None).cast(pl.Float64).alias(new_name)
 
 
@@ -120,29 +138,29 @@ def process_shard(cluster_id: str, kind: str, raw_path_str: str) -> str:
         return f"skip {kind} {cluster_id} {raw_path.name}"
 
     df = read_ndjson_permissive(raw_path, kind)
-    columns = df.columns
+    schema = df.schema
 
     if kind == "machines":
-        if "capacity" not in columns:
+        if "capacity" not in schema:
             return f"skip-empty {kind} {cluster_id} {raw_path.name}"
         df = df.with_columns([
-            safe_extract_expr(columns, "capacity", "cpus", "machine_cpu"),
-            safe_extract_expr(columns, "capacity", "memory", "machine_mem"),
+            safe_extract_expr(schema, "capacity", "cpus", "machine_cpu"),
+            safe_extract_expr(schema, "capacity", "memory", "machine_mem"),
         ]).drop("capacity")
         df = df.filter(pl.col("machine_cpu").is_not_null())
     elif kind == "events":
         df = df.with_columns([
-            safe_extract_expr(columns, "resource_request", "cpus", "req_cpu"),
-            safe_extract_expr(columns, "resource_request", "memory", "req_mem"),
+            safe_extract_expr(schema, "resource_request", "cpus", "req_cpu"),
+            safe_extract_expr(schema, "resource_request", "memory", "req_mem"),
         ])
         cols_to_drop = [c for c in ["resource_request", "constraint"] if c in df.columns]
         df = df.drop(cols_to_drop)
     elif kind == "usage":
         df = df.with_columns([
-            safe_extract_expr(columns, "average_usage", "cpus", "avg_cpu"),
-            safe_extract_expr(columns, "average_usage", "memory", "avg_mem"),
-            safe_extract_expr(columns, "maximum_usage", "cpus", "max_cpu"),
-            safe_extract_expr(columns, "maximum_usage", "memory", "max_mem"),
+            safe_extract_expr(schema, "average_usage", "cpus", "avg_cpu"),
+            safe_extract_expr(schema, "average_usage", "memory", "avg_mem"),
+            safe_extract_expr(schema, "maximum_usage", "cpus", "max_cpu"),
+            safe_extract_expr(schema, "maximum_usage", "memory", "max_mem"),
         ])
         to_drop = [
             "average_usage",
