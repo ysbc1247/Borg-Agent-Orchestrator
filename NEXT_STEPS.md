@@ -66,6 +66,8 @@ Advanced XGBoost track status:
   - Pilot sweep winner: `regularized_balanced`
   - Winner parameters: `max_depth=6`, `learning_rate=0.03`, `n_estimators=1600`, `subsample=0.9`, `colsample_bytree=0.7`, `min_child_weight=8`, `reg_alpha=0.2`, `reg_lambda=2.0`, `early_stopping_rounds=80`
   - Full tuned retrain is currently running under model name `xgboost_failure_risk_tuned_v1`
+  - As of milestone time, the tuned retrain is still on `target_failure_5m`; no tuned metrics or model files have been emitted yet
+  - Live process at checkpoint: `./scripts/run_advanced_train_resumable.sh` plus `scripts/train_advanced_xgboost.py`, running for about `2h 25m` with CPU still active
 
 Completed stages:
 
@@ -194,9 +196,10 @@ Recommended next sequence:
 
 1. Let `./scripts/run_advanced_xgboost_pipeline.sh` continue the current flatten run from `~/Documents/borg_xgboost_workspace/runtime/logs/20260331021002_advanced_flatten.log`.
 2. Let the active `xgboost_failure_risk_tuned_v1` retrain finish and compare tuned-vs-baseline metrics horizon by horizon.
-3. Regenerate the bilingual evaluation reports from the winning tuned model if it beats the current baseline.
-4. Investigate why clusters `e`, `f`, and `g` contain zero positives in the current fixed-shard advanced slice.
-5. Decide whether to increase the advanced raw shard depth so later clusters contribute positive labels to the training corpus.
+3. If the tuned `5m` run remains stuck unusually long without emitting artifacts, reduce the tuned retrain row caps or the estimator budget and restart from the tuned model name.
+4. Regenerate the bilingual evaluation reports from the winning tuned model if it beats the current baseline.
+5. Investigate why clusters `e`, `f`, and `g` contain zero positives in the current fixed-shard advanced slice.
+6. Decide whether to increase the advanced raw shard depth so later clusters contribute positive labels to the training corpus.
 
 Current raw-data expansion note:
 
