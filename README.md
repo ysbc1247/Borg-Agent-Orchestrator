@@ -2,6 +2,17 @@
 
 Project scaffold for a Borg-inspired multi-agent scheduling and cluster optimization system.
 
+## Bilingual Documentation
+
+Repository-level companion documents now live under:
+
+- `docs/en`
+- `docs/ko`
+- `reports/en`
+- `reports/ko`
+
+The original Markdown files remain the canonical working documents, and the language directories provide organized English/Korean companion access.
+
 ## Structure
 
 ```text
