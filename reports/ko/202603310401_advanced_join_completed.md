@@ -1,10 +1,10 @@
-# 고급 가입 완료
+# Advanced Join 완료
 
 타임스탬프: `2026-03-31 04:01 KST`
 
-## 결과
+## Result
 
-- 이제 `b`, `c`, `d`, `e`, `f` 및 `g` 클러스터에 대한 고급 조인 데이터 세트 단계가 완료되었습니다.
+- 이제 `b`, `c`, `d`, `e`, `f` 및 `g` 클러스터에 대한 Advanced join 데이터 세트 단계가 완료되었습니다.
 - 최종 재개 가능한 가입 로그:
   - `~/Documents/borg_xgboost_workspace/runtime/logs/20260331035719_advanced_join_resumable.log`
 
@@ -23,7 +23,7 @@
   - 인용된 숫자 사용 필드에 대해 `scan_ndjson(..., schema_overrides=Int64)`에 의존하는 것을 중지했습니다.
   - `strict=False`으로 스캔한 후 숫자 스칼라 필드를 캐스팅합니다.
 - `scripts/make_dataset.py`
-  - 연결하기 전에 각 혼합 스키마 쪽모이 세공 조각을 정규화합니다.
+  - 연결하기 전에 각 혼합 스키마 parquet 조각을 정규화합니다.
   - 수집 전 최종 데이터 세트 전체 정렬을 제거했습니다.
   - 글로벌 이벤트/머신 사전 그룹 정렬을 그룹화된 `sort_by(...).last()` 집계로 대체했습니다.
 - `scripts/run_advanced_join_resumable.sh`

@@ -1,4 +1,4 @@
-# 저장소 지침
+# Repository Instructions
 
 이 지침은 이 저장소에서 수행되는 작업에 적용됩니다.
 
@@ -37,11 +37,11 @@
 - `~/Documents` 아래 저장소 외부에 대규모 Borg 데이터를 보관하는 것을 선호합니다.
 - `~/Documents/borg_data`을 기본 원시 데이터 위치로 처리합니다.
 - `~/Documents/borg_processed`을 기본 처리 데이터 위치로 처리합니다.
-- `~/Documents/borg_xgboost_workspace`을 자체 `raw`, `processed`, `models`, `reports`, `runtime` 및 `config` 하위 트리가 있는 고급 XGBoost 트랙의 전용 루트로 처리합니다.
+- `~/Documents/borg_xgboost_workspace`을 자체 `raw`, `processed`, `models`, `reports`, `runtime` 및 `config` 하위 트리가 있는 Advanced XGBoost 트랙의 전용 루트로 처리합니다.
 - `~/Documents/borg_data` 또는 `~/Documents/borg_processed`에 고급 모델 원시 데이터 또는 아티팩트를 혼합하지 마십시오. 첫 번째 기본 작업과 고급 작업은 디렉터리 루트 수준에서 격리된 상태로 유지되어야 합니다.
 - 생성된 데이터세트나 대용량 외부 데이터 파일을 git에 커밋하지 마세요.
-- 외부 처리 데이터 트리 아래에 새로운 쪽모이 세공 유형 또는 아티팩트 디렉터리가 생성되면 파일의 의미와 중요한 열이 나타내는 내용을 설명하는 스키마 또는 아티팩트 설명 파일을 동일한 디렉터리에 추가합니다.
-- 쪽모이 세공 의미에 대해 저장소 문서에만 의존하지 마십시오. 실제 생성된 출력 옆에 로컬 README 스타일 설명을 유지하세요.
+- 외부 처리 데이터 트리 아래에 새로운 parquet 유형 또는 아티팩트 디렉터리가 생성되면 파일의 의미와 중요한 열이 나타내는 내용을 설명하는 스키마 또는 아티팩트 설명 파일을 동일한 디렉터리에 추가합니다.
+- parquet 의미에 대해 저장소 문서에만 의존하지 마십시오. 실제 생성된 출력 옆에 로컬 README 스타일 설명을 유지하세요.
 
 ## 클러스터 기본값
 

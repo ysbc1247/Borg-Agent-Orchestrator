@@ -1,16 +1,16 @@
-# 고급 기능 및 교육 진행
+# Advanced Feature 및 Training 진행
 
 타임스탬프: `2026-03-31 04:15 KST`
 
-## 기능 빌드 상태
+## feature build 상태
 
-- `b`, `c`, `d`, `e`, `f` 및 `g` 클러스터에 대한 고급 기능 쪽모이 세공 생성이 완료되었습니다.
+- `b`, `c`, `d`, `e`, `f` 및 `g` 클러스터에 대한 Advanced feature parquet 생성이 완료되었습니다.
 - 기능 저장소 디렉터리:
   - `~/Documents/borg_xgboost_workspace/processed/feature_store`
-- 최신 기능 빌드 로그:
+- 최신 feature build 로그:
   - `~/Documents/borg_xgboost_workspace/runtime/logs/20260331040043_advanced_feature_build.log`
 
-## 기능 라벨 요약
+## 기능 라벨 Summary
 
 - `b`
   - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 0이 아닌 긍정
@@ -19,11 +19,11 @@
 - `d`
   - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 0이 아닌 긍정
 - `e`
-  - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 양성 반응 없음
+  - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 positive label 없음
 - `f`
-  - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 양성 반응 없음
+  - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 positive label 없음
 - `g`
-  - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 양성 반응 없음
+  - `5m`, `15m`, `30m`, `45m`, `60m`에 대한 positive label 없음
 
 ## 훈련 경로 변경 사항
 
@@ -44,11 +44,11 @@
 - 현재 실행 중인 목표:
   - `target_failure_15m`
 
-## 5분 지평선 지표
+## 5분 horizon 지표
 
 - 모델 디렉토리:
   - `~/Documents/borg_xgboost_workspace/models/xgboost/xgboost_failure_risk_target_failure_5m`
-- 측정항목 요약:
+- 측정항목 Summary:
   - 소스 트레인 행: `307,815,199`
   - 소스 검증 행: `76,991,970`
   - 샘플링된 열차 행: `8,003,074`

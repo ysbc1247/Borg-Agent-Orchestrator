@@ -1,4 +1,4 @@
-# 다중 에이전트 시스템 아키텍처
+# Multi-Agent System Architecture
 
 이 문서는 Borg 클러스터 환경을 관리하는 세 개의 자율 에이전트에 대한 전문적인 역할, 관찰 공간 및 보상 기능을 정의합니다.
 
@@ -74,9 +74,9 @@ R_e = Node_Health_Regained - (Priority_of_Terminated_Task * SLA_Penalty)
 
 ## 데이터 스키마 참조(평탄화 후)
 
-| 칼럼 | 에이전트 | 목적 |
+| 칼럼 | 에이전트 | Purpose |
 | --- | --- | --- |
-| `avg_cpu` / `max_cpu` | 예측가 | 기본 시계열 기능 |
+| `avg_cpu` / `max_cpu` | Forecaster | 기본 시계열 기능 |
 | `req_cpu` / `req_mem` | 사금 | 빈 패킹 제약 |
 | `priority` | 퇴거자 | 작업 종료에 대한 기본 결정 가중치 |
 | `machine_cpu` | 모두 | 정규화의 상한 |

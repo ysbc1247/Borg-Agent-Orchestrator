@@ -1,10 +1,10 @@
-# 고급 교육 완료
+# Advanced Training 완료
 
 타임스탬프: `2026-03-31 04:23 KST`
 
-## 결과
+## Result
 
-- 구성된 모든 범위에 대해 고급 XGBoost 교육 단계가 완료되었습니다.
+- 구성된 모든 horizon에 대해 Advanced XGBoost 교육 단계가 완료되었습니다.
   - `5m`
   - `15m`
   - `30m`
@@ -25,7 +25,7 @@
 - 긍정적인 예는 각 분할 내에서 전체가 보존되었습니다.
 - 네거티브는 해시된 행 ID를 통해 결정적으로 샘플링되었습니다.
 
-## 측정항목 요약
+## 측정항목 Summary
 
 - `target_failure_5m`
   - 평균 정밀도: `0.9810528429`
@@ -48,11 +48,11 @@
   - 정밀도@1%: `0.9960519740`
   - 회상@1%: `0.2326268120`
 
-## 유물
+## artifact
 
 - 모델 루트:
   - `~/Documents/borg_xgboost_workspace/models/xgboost`
-- 이제 각 지평선에는 다음이 포함됩니다.
+- 이제 각 horizon에는 다음이 포함됩니다.
   - `model.json`
   - `model_config.json`
   - `metrics.json`

@@ -2,7 +2,7 @@
 
 Timestamp: `2026-03-31 15:03 KST`
 
-## 한 줄 요약
+## 짧은 Summary
 
 차이가 크게 보이는 가장 큰 이유는 **모델 공식이 틀렸다기보다, 평가에 사용된 데이터 집단이 다르기 때문**입니다.
 
@@ -11,7 +11,7 @@ Timestamp: `2026-03-31 15:03 KST`
   - positive는 전부 유지
   - negative는 상당수 제거
 
-Precision은 "선택한 것 중 진짜 양성이 얼마나 되는가"를 보는 지표이기 때문에, negative를 많이 제거하면 수치가 훨씬 좋아 보이게 됩니다.
+Precision은 "선택한 것 중 진짜 positive이 얼마나 되는가"를 보는 지표이기 때문에, negative를 많이 제거하면 수치가 훨씬 좋아 보이게 됩니다.
 
 즉:
 
@@ -60,7 +60,7 @@ Precision은 "선택한 것 중 진짜 양성이 얼마나 되는가"를 보는 
 
 Precision은 다음 질문입니다.
 
-> 모델이 위험하다고 고른 것들 중에서, 실제 양성은 몇 개였는가?
+> 모델이 위험하다고 고른 것들 중에서, 실제 positive은 몇 개였는가?
 
 negative가 적게 남아 있으면, 상위 risk 구간에 positive가 차지하는 비율이 자연스럽게 높아집니다.
 
@@ -120,10 +120,10 @@ Baseline의 계산 방식은 일반적인 ranking metric 방식입니다.
 - precision@k:
   - `risk_score`로 정렬
   - 상위 `k`개 선택
-  - 양성 수 / 선택 수
+  - positive 수 / 선택 수
 - recall@k:
   - 상위 `k`개 선택
-  - 선택된 양성 수 / 전체 양성 수
+  - 선택된 positive 수 / 전체 positive 수
 - average precision:
   - rank 기반 average precision
 
@@ -149,7 +149,7 @@ XGBoost 쪽도 수식 자체는 일반적인 방식입니다.
 
 ### XGBoost가 답하는 질문
 
-> 양성은 모두 유지하고 negative는 많이 제거한 validation population에서, 상위 1%의 precision은 얼마인가?
+> positive은 모두 유지하고 negative는 많이 제거한 validation population에서, 상위 1%의 precision은 얼마인가?
 
 이 둘은 같은 실험이 아닙니다.
 
@@ -217,7 +217,7 @@ validation set이 negative 제거 때문에 훨씬 작아졌다면:
 - 현재 XGBoost 지표는 예전 baseline 보고서와 apples-to-apples 비교가 아닙니다.
 - 현재 fixed-shard advanced slice에서는 `e`, `f`, `g` 클러스터의 positive가 0개입니다.
 - sampled validation은 실험을 가능하게 해 주지만, 최종 운영형 평가로 바로 쓰기에는 한계가 있습니다.
-- 현재 bilingual evaluation report도 XGBoost 결과를 잘 정리하고는 있지만, full-population evaluation이 추가되면 다시 갱신하는 것이 맞습니다.
+- 현재 bilingual evaluation report도 XGBoost Result를 잘 정리하고는 있지만, full-population evaluation이 추가되면 다시 갱신하는 것이 맞습니다.
 
 ## 결론
 
