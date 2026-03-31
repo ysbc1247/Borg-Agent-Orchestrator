@@ -41,7 +41,7 @@ def model_name_for_target(target_column: str) -> str:
 
 
 def model_params() -> dict[str, float | int | str]:
-    return {
+    params: dict[str, float | int | str] = {
         "n_estimators": int(os.environ.get("BORG_XGB_N_ESTIMATORS", "400")),
         "max_depth": int(os.environ.get("BORG_XGB_MAX_DEPTH", "8")),
         "learning_rate": float(os.environ.get("BORG_XGB_LEARNING_RATE", "0.05")),
@@ -56,6 +56,10 @@ def model_params() -> dict[str, float | int | str]:
         "random_state": int(os.environ.get("BORG_XGB_RANDOM_STATE", "42")),
         "n_jobs": int(os.environ.get("BORG_XGB_N_JOBS", "8")),
     }
+    raw_early_stopping = os.environ.get("BORG_XGB_EARLY_STOPPING_ROUNDS")
+    if raw_early_stopping:
+        params["early_stopping_rounds"] = int(raw_early_stopping)
+    return params
 
 
 def model_output_dir(target_column: str) -> Path:
@@ -273,7 +277,11 @@ def train_and_evaluate(feature_scan: pl.LazyFrame, target_column: str) -> dict[s
     params["scale_pos_weight"] = compute_scale_pos_weight(train_y)
 
     model = XGBClassifier(**params)
-    model.fit(train_x, train_y)
+    fit_kwargs: dict[str, object] = {}
+    if "early_stopping_rounds" in params:
+        fit_kwargs["eval_set"] = [(valid_x, valid_y)]
+        fit_kwargs["verbose"] = False
+    model.fit(train_x, train_y, **fit_kwargs)
     model.get_booster().save_model(model_path(target_column))
     valid_scores = model.predict_proba(valid_x)[:, 1].tolist()
 
@@ -326,6 +334,12 @@ def train_and_evaluate(feature_scan: pl.LazyFrame, target_column: str) -> dict[s
         "sampled_validation_positive_rows": valid_stats["positives"],
         "train_negative_keep_fraction": train_stats["negative_keep_fraction"],
         "validation_negative_keep_fraction": valid_stats["negative_keep_fraction"],
+        "best_iteration": getattr(model, "best_iteration", None),
+        "best_score": (
+            float(model.best_score)
+            if getattr(model, "best_score", None) is not None
+            else None
+        ),
         "split_time": split_time,
         "average_precision": average_precision(prediction_frame, target_column),
         "precision_at_0_1_percent": precision_at_k(prediction_frame, point_one_percent, target_column),
