@@ -31,6 +31,8 @@ Advanced XGBoost track status:
 - Latest join log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331035719_advanced_join_resumable.log`
 - Latest advanced feature-build log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331040043_advanced_feature_build.log`
 - Latest advanced train log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331041159_advanced_train_resumable.log`
+- Latest tuning report: `~/Documents/borg_xgboost_workspace/reports/202603311104_advanced_xgboost_tuning.json`
+- Current tuned retrain log: `~/Documents/borg_xgboost_workspace/runtime/logs/20260331111307_advanced_train_resumable.log`
 - Advanced flatten currently completed for the fixed-shard advanced set after regenerating corrupt and failed usage parquet shards
 - Current flattened advanced shard count: `186` non-`.DS_Store` parquet files
 - Current advanced flatten config: `BORG_FLATTEN_WORKERS=8`, `BORG_FLATTEN_HEARTBEAT_SECONDS=10`
@@ -60,6 +62,10 @@ Advanced XGBoost track status:
   - `target_failure_30m`: average precision `0.9720370948`, precision@1% `0.9954522739`, recall@1% `0.2821028481`
   - `target_failure_45m`: average precision `0.9659209812`, precision@1% `0.9960021988`, recall@1% `0.2523550266`
   - `target_failure_60m`: average precision `0.9595348583`, precision@1% `0.9960519740`, recall@1% `0.2326268120`
+- Tuning status:
+  - Pilot sweep winner: `regularized_balanced`
+  - Winner parameters: `max_depth=6`, `learning_rate=0.03`, `n_estimators=1600`, `subsample=0.9`, `colsample_bytree=0.7`, `min_child_weight=8`, `reg_alpha=0.2`, `reg_lambda=2.0`, `early_stopping_rounds=80`
+  - Full tuned retrain is currently running under model name `xgboost_failure_risk_tuned_v1`
 
 Completed stages:
 
@@ -187,9 +193,10 @@ The immediate next engineering work is now to let the advanced flatten run compl
 Recommended next sequence:
 
 1. Let `./scripts/run_advanced_xgboost_pipeline.sh` continue the current flatten run from `~/Documents/borg_xgboost_workspace/runtime/logs/20260331021002_advanced_flatten.log`.
-2. Review per-horizon model artifacts for `5m`, `15m`, `30m`, `45m`, and `60m`.
-3. Investigate why clusters `e`, `f`, and `g` contain zero positives in the current fixed-shard advanced slice.
-4. Decide whether to increase the advanced raw shard depth so later clusters contribute positive labels to the training corpus.
+2. Let the active `xgboost_failure_risk_tuned_v1` retrain finish and compare tuned-vs-baseline metrics horizon by horizon.
+3. Regenerate the bilingual evaluation reports from the winning tuned model if it beats the current baseline.
+4. Investigate why clusters `e`, `f`, and `g` contain zero positives in the current fixed-shard advanced slice.
+5. Decide whether to increase the advanced raw shard depth so later clusters contribute positive labels to the training corpus.
 
 Current raw-data expansion note:
 
